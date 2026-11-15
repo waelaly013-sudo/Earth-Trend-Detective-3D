@@ -124,7 +124,7 @@ export const RegistrationIntroAnimation: React.FC<RegistrationIntroAnimationProp
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <video
           ref={bgVideoRef}
-          src="/assets/aistudio/phoenix_intro_5a7f7bc6.mp4"
+          src={`${import.meta.env.BASE_URL}assets/aistudio/phoenix_intro_5a7f7bc6.mp4`}
           autoPlay
           loop
           muted
@@ -190,7 +190,7 @@ export const RegistrationIntroAnimation: React.FC<RegistrationIntroAnimationProp
           {/* Primary Crisp Video */}
           <video
             ref={videoRef}
-            src="/assets/aistudio/phoenix_intro_5a7f7bc6.mp4"
+            src={`${import.meta.env.BASE_URL}assets/aistudio/phoenix_intro_5a7f7bc6.mp4`}
             autoPlay
             playsInline
             muted={isMuted}

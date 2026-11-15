@@ -1272,7 +1272,7 @@ export const EarthGlobe: React.FC<EarthGlobeProps> = ({
     earthMatRef.current = earthMat;
 
     // Load authentic NASA Blue Marble real Earth texture covering 100% of the sphere seamlessly
-    const realEarthTex = texLoader.load('/earth-blue-marble.jpg', (texture) => {
+    const realEarthTex = texLoader.load(`${import.meta.env.BASE_URL}earth-blue-marble.jpg`, (texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
       texture.wrapS = THREE.RepeatWrapping;
@@ -1377,7 +1377,7 @@ export const EarthGlobe: React.FC<EarthGlobeProps> = ({
     nightLightsMeshRef.current = nightMesh;
     earthSpinGroup.add(nightMesh);
 
-    texLoader.load('/earth-night.jpg', (texture) => {
+    texLoader.load(`${import.meta.env.BASE_URL}earth-night.jpg`, (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       nightShaderMat.uniforms.u_nightLightsTex.value = texture;
@@ -1400,7 +1400,7 @@ export const EarthGlobe: React.FC<EarthGlobeProps> = ({
     cloudsMeshRef.current = cloudMesh;
     earthSpinGroup.add(cloudMesh);
 
-    texLoader.load('/earth-clouds.jpg', (texture) => {
+    texLoader.load(`${import.meta.env.BASE_URL}earth-clouds.jpg`, (texture) => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       cloudMat.map = texture;
