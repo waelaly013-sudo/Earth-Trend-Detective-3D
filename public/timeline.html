@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Machine Timeline Control Panel</title>
+  <!-- Google Fonts: JetBrains Mono for monospace UI, Fraunces for bold display serif date -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       CSS Variables & Design Tokens
+       ========================================================================== */
+    :root {
+      --bg-panel-start: #0a111c;
+      --bg-panel-end: #0d1624;
+      --border-panel: rgba(120, 160, 180, 0.25);
+      --inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.5), 0 20px 40px rgba(0, 0, 0, 0.6);
+      
+      --color-teal-bright: #2dd4bf;
+      --color-teal-glow: rgba(45, 212, 191, 0.4);
+      --color-teal-bg: rgba(20, 184, 166, 0.15);
+      --color-teal-border: rgba(45, 212, 191, 0.5);
+      
+      --color-amber-text: #f5c542;
+      --color-amber-bg: rgba(245, 160, 40, 0.12);
+      --color-amber-border: rgba(245, 160, 40, 0.6);
+      
+      --color-btn-slate: #1b2636;
+      --color-btn-slate-hover: #26354a;
+      
+      --color-mono-muted: #7d8fa3;
+      --color-milestone-muted: #5f7186;
+      --color-divider: rgba(255, 255, 255, 0.08);
+
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-serif: 'Fraunces', Georgia, serif;
+      --transition-speed: 180ms;
+    }
+
+    /* Base Reset & Background Simulation */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: #050b14;
+      background-image: 
+        radial-gradient(circle at 50% 20%, rgba(18, 181, 160, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(122, 15, 53, 0.12) 0%, transparent 50%),
+        linear-gradient(to bottom, #040810, #08101a);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      overflow-x: hidden;
+      font-family: var(--font-mono);
+      color: #ffffff;
+      padding-bottom: 12px;
+    }
+
+    /* Decorative dashboard background hint */
+    .dashboard-preview-hint {
+      position: absolute;
+      top: 40px;
+      text-align: center;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .dashboard-preview-hint h1 {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .dashboard-preview-hint p {
+      font-size: 13px;
+      color: var(--color-mono-muted);
+    }
+
+    /* ==========================================================================
+       Timeline Container & Collapse Wrapper
+       ========================================================================== */
+    .timeline-dock-container {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      max-width: 1346px; /* Exactly fits 1366px screen with 10px margins */
+      margin: 0 auto;
+      z-index: 9999;
+      transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .timeline-dock-container.is-collapsed {
+      transform: translateY(calc(100% - 30px));
+    }
+
+    /* ==========================================================================
+       "Hide Timeline" Tab
+       ========================================================================== */
+    .tab-toggle-wrapper {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      height: 30px;
+      z-index: 2;
+    }
+
+    .tab-toggle-btn {
+      width: 230px;
+      height: 30px;
+      background: linear-gradient(to bottom, var(--bg-panel-start), var(--bg-panel-end));
+      border: 1px solid var(--border-panel);
+      border-bottom: none;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #cbd5e1;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 500;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+      transition: background var(--transition-speed), color var(--transition-speed);
+    }
+
+    .tab-toggle-btn:hover {
+      background: #121c2d;
+      color: #ffffff;
+    }
+
+    .tab-toggle-btn .tab-chevron {
+      stroke: var(--color-teal-bright);
+      transition: transform 300ms ease;
+    }
+
+    .timeline-dock-container.is-collapsed .tab-toggle-btn .tab-chevron {
+      transform: rotate(180deg);
+    }
+
+    /* ==========================================================================
+       Overall Panel
+       ========================================================================== */
+    .timeline-panel {
+      position: relative;
+      background: linear-gradient(180deg, var(--bg-panel-start) 0%, var(--bg-panel-end) 100%);
+      border: 1px solid var(--border-panel);
+      border-radius: 16px;
+      box-shadow: var(--inner-shadow);
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* ==========================================================================
+       Header Row
+       ========================================================================== */
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .clock-icon-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+    }
+
+    .clock-icon-wrap svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--color-teal-bright);
+      filter: drop-shadow(0 0 6px var(--color-teal-glow));
+    }
+
+    .title-label {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--color-mono-muted);
+      text-transform: uppercase;
+    }
+
+    .display-date {
+      font-family: var(--font-serif);
+      font-size: 30px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+      min-width: 140px;
+    }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border-radius: 9999px;
+      transition: all var(--transition-speed);
+      white-space: nowrap;
+    }
+
+    .status-badge.projection {
+      color: var(--color-amber-text);
+      background-color: var(--color-amber-bg);
+      border: 1px solid var(--color-amber-border);
+      box-shadow: 0 0 12px rgba(245, 197, 66, 0.2);
+    }
+
+    .status-badge.observed {
+      color: var(--color-teal-bright);
+      background-color: var(--color-teal-bg);
+      border: 1px solid var(--color-teal-border);
+      box-shadow: 0 0 12px rgba(45, 212, 191, 0.2);
+    }
+
+    /* Header Right: Quick Jump Buttons */
+    .quick-jump-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quick-btn {
+      background: var(--color-btn-slate);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #cbd5e1;
+      transition: background var(--transition-speed), color var(--transition-speed), box-shadow var(--transition-speed), transform 120ms ease;
+    }
+
+    .quick-btn:hover {
+      background: var(--color-btn-slate-hover);
+      transform: translateY(-1px);
+    }
+
+    .quick-btn:active {
+      transform: translateY(1px);
+    }
+
+    .quick-btn.btn-2030 {
+      color: #f3d56b;
+    }
+    .quick-btn.btn-2030:hover {
+      box-shadow: 0 0 10px rgba(243, 213, 107, 0.35);
+    }
+
+    .quick-btn.btn-2040 {
+      color: #f08a9b;
+    }
+    .quick-btn.btn-2040:hover {
+      box-shadow: 0 0 10px rgba(240, 138, 155, 0.35);
+    }
+
+    /* ==========================================================================
+       Gradient Slider Zone
+       ========================================================================== */
+    .slider-zone {
+      position: relative;
+      width: 100%;
+      padding: 18px 0 14px 0;
+    }
+
+    .track-wrapper {
+      position: relative;
+      width: 100%;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .slider-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 9999px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      /* Dynamic background set via JavaScript based on calculated Today marker */
+    }
+
+    /* Today Marker (2px vertical line across track extending 8px above/below) */
+    .today-marker-line {
+      position: absolute;
+      top: -8px;
+      bottom: -8px;
+      width: 2px;
+      background: #ffffff;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 14px rgba(45, 212, 191, 0.8);
+      pointer-events: none;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    .today-marker-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 7px;
+      background: #0f1826;
+      border: 1px solid rgba(120, 160, 180, 0.4);
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      padding: 4px 10px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+    }
+
+    /* Thumb: 30px circle, 3px white outer, navy inside, 14px orange-red dot */
+    .slider-thumb {
+      position: absolute;
+      top: 50%;
+      width: 30px;
+      height: 30px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: #0b1420;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 12px rgba(255, 90, 54, 0.6), 0 2px 8px rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      z-index: 5;
+      outline: none;
+      touch-action: none;
+      transition: transform 80ms ease, box-shadow 150ms ease;
+    }
+
+    .slider-thumb:active,
+    .slider-thumb.is-dragging {
+      cursor: grabbing;
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow: 0 0 18px rgba(255, 90, 54, 0.9), 0 4px 12px rgba(0, 0, 0, 0.9);
+    }
+
+    .slider-thumb:focus-visible {
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.8), 0 0 16px rgba(255, 90, 54, 0.8);
+    }
+
+    .thumb-core-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: #ff5a36;
+      box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 0 0 6px #ff5a36;
+      pointer-events: none;
+    }
+
+    /* ==========================================================================
+       Divider
+       ========================================================================== */
+    .panel-divider {
+      width: 100%;
+      height: 1px;
+      background: var(--color-divider);
+    }
+
+    /* ==========================================================================
+       Footer Controls & Milestones
+       ========================================================================== */
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--color-teal-bg);
+      border: 1px solid var(--color-teal-border);
+      border-radius: 10px;
+      padding: 10px 20px;
+      color: var(--color-teal-bright);
+      font-family: var(--font-mono);
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .play-btn:hover {
+      background: rgba(45, 212, 191, 0.25);
+      border-color: rgba(45, 212, 191, 0.8);
+      box-shadow: 0 0 14px rgba(45, 212, 191, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .play-btn:active {
+      transform: translateY(1px);
+    }
+
+    .play-icon-svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--color-teal-bright);
+    }
+
+    /* Month Selector */
+    .month-select-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .month-select-label {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--color-mono-muted);
+    }
+
+    .month-select-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .month-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #0f1826;
+      border: 1px solid rgba(120, 160, 180, 0.35);
+      border-radius: 8px;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 8px 34px 8px 14px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+    }
+
+    .month-select:hover,
+    .month-select:focus {
+      border-color: var(--color-teal-bright);
+      box-shadow: 0 0 8px rgba(45, 212, 191, 0.25);
+    }
+
+    .month-select-wrapper::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--color-teal-bright);
+      pointer-events: none;
+    }
+
+    /* Milestones Container - aligned accurately with true dates */
+    .milestones-container {
+      position: relative;
+      flex: 1;
+      height: 24px;
+      min-width: 420px;
+    }
+
+    .milestone-label {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--color-milestone-muted);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color var(--transition-speed), text-shadow var(--transition-speed);
+    }
+
+    /* Boundary anchor alignments so text doesn't overflow container edges */
+    .milestone-label.milestone-start {
+      transform: translate(0, -50%);
+    }
+
+    .milestone-label.milestone-end {
+      transform: translate(-100%, -50%);
+    }
+
+    .milestone-label:hover {
+      color: #cbd5e1;
+    }
+
+    .milestone-label.active-milestone {
+      color: #ffffff;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    }
+
+    /* ==========================================================================
+       Responsive Media Queries
+       ========================================================================== */
+    @media (max-width: 1100px) {
+      .milestone-label:nth-child(2),
+      .milestone-label:nth-child(4) {
+        display: none; /* Hide intermediate milestones to prevent collisions */
+      }
+    }
+
+    @media (max-width: 768px) {
+      .timeline-panel {
+        padding: 16px;
+      }
+      .display-date {
+        font-size: 24px;
+      }
+      .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .quick-jump-row {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .footer-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .milestones-container {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background decorative title simulation -->
+  <div class="dashboard-preview-hint">
+    <h1>NASA CLIMATE PROJECTION SYSTEM</h1>
+    <p>EARTH SCIENCE SYSTEM & 4D TIME MACHINE DOCK</p>
+  </div>
+
+  <!-- Docked Bottom Timeline Component -->
+  <div class="timeline-dock-container" id="timelineDock">
+    
+    <!-- "Hide Timeline" Attached Top Tab -->
+    <div class="tab-toggle-wrapper">
+      <button class="tab-toggle-btn" id="tabToggleBtn" aria-label="Toggle Timeline Visibility">
+        <svg class="tab-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+        <span id="tabLabel">Hide Timeline</span>
+      </button>
+    </div>
+
+    <!-- Main Panel -->
+    <div class="timeline-panel" role="region" aria-label="Time Machine Controls">
+
+      <!-- Header Row -->
+      <div class="header-row">
+        <!-- Left: Clock Icon + TIME MACHINE: + Large Date + Model Badge -->
+        <div class="header-left">
+          <div class="clock-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          
+          <span class="title-label">TIME MACHINE:</span>
+          <span class="display-date" id="displayDate">Dec 2040</span>
+          
+          <div class="status-badge projection" id="statusBadge">
+            MODEL PROJECTION (95% CI)
+          </div>
+        </div>
+
+        <!-- Right: Quick-Jump Buttons -->
+        <div class="quick-jump-row">
+          <button class="quick-btn" id="btnMinus10y" title="Subtract 10 Years">-10y</button>
+          <button class="quick-btn" id="btnToday" title="Jump to Present Date">Today (<span id="btnTodayYear">2026</span>)</button>
+          <button class="quick-btn" id="btnPlus10y" title="Add 10 Years">+10y</button>
+          <button class="quick-btn btn-2030" id="btn2030" title="Jump to 2030">2030</button>
+          <button class="quick-btn btn-2040" id="btn2040" title="Jump to 2040">2040</button>
+        </div>
+      </div>
+
+      <!-- Gradient Slider Zone -->
+      <div class="slider-zone">
+        <div class="track-wrapper" id="trackWrapper">
+          <!-- Continuous Cool-to-Hot Heat Gradient Track -->
+          <div class="slider-track" id="sliderTrack"></div>
+
+          <!-- Dynamic Today Marker & Tooltip -->
+          <div class="today-marker-line" id="todayMarkerLine">
+            <div class="today-marker-tooltip">Today</div>
+          </div>
+
+          <!-- Interactive Draggable & Accessible Thumb -->
+          <div 
+            class="slider-thumb" 
+            id="sliderThumb" 
+            role="slider" 
+            tabindex="0"
+            aria-valuemin="0" 
+            aria-valuemax="491" 
+            aria-valuenow="491" 
+            aria-label="Time Machine Month Slider"
+          >
+            <div class="thumb-core-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thin 1px Divider -->
+      <div class="panel-divider"></div>
+
+      <!-- Footer Row -->
+      <div class="footer-row">
+        <!-- Left: Play Button + Month Dropdown -->
+        <div class="footer-left">
+          <button class="play-btn" id="playBtn" aria-label="Play timeline animation">
+            <svg class="play-icon-svg" id="playIconSvg" viewBox="0 0 24 24">
+              <!-- Play triangle -->
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="playBtnText">Play Timeline</span>
+          </button>
+
+          <div class="month-select-group">
+            <span class="month-select-label">Month:</span>
+            <div class="month-select-wrapper">
+              <select class="month-select" id="monthSelect" aria-label="Select Month">
+                <option value="0">Jan</option>
+                <option value="1">Feb</option>
+                <option value="2">Mar</option>
+                <option value="3">Apr</option>
+                <option value="4">May</option>
+                <option value="5">Jun</option>
+                <option value="6">Jul</option>
+                <option value="7">Aug</option>
+                <option value="8">Sep</option>
+                <option value="9">Oct</option>
+                <option value="10">Nov</option>
+                <option value="11">Dec</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Milestones dynamically placed at exact time positions -->
+        <div class="milestones-container" id="milestonesContainer">
+          <!-- Injected via JavaScript for mathematically accurate placement -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Vanilla JavaScript Controller
+       ========================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      // ------------------------------------------------------------------------
+      // Configuration & Time Range Calculations
+      // ------------------------------------------------------------------------
+      const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      const MIN_YEAR = 2000;
+      const MIN_MONTH = 0; // Jan 2000
+      const MAX_YEAR = 2040;
+      const MAX_MONTH = 11; // Dec 2040
+
+      // Total month intervals: 40 years * 12 + 11 = 491 steps (492 total months)
+      const TOTAL_STEPS = (MAX_YEAR - MIN_YEAR) * 12 + (MAX_MONTH - MIN_MONTH);
+
+      // Real Current Date calculation (Environment is year 2026, month Nov = 10)
+      const systemNow = new Date();
+      let todayYear = systemNow.getFullYear();
+      let todayMonth = systemNow.getMonth();
+
+      // Ensure today falls cleanly within standard 2026 present range
+      if (todayYear < MIN_YEAR || todayYear > MAX_YEAR) {
+        todayYear = 2026;
+        todayMonth = 10; // November
+      }
+
+      const todayIndex = (todayYear - MIN_YEAR) * 12 + todayMonth;
+      const todayPercent = (todayIndex / TOTAL_STEPS) * 100;
+
+      // Milestone definitions with exact target dates
+      const MILESTONES = [
+        { label: '2000 (Start)', year: 2000, month: 0, className: 'milestone-start' },
+        { label: '2010', year: 2010, month: 0 },
+        { label: `${todayYear} (Present)`, year: todayYear, month: todayMonth },
+        { label: '2035', year: 2035, month: 0 },
+        { label: '2040 (Horizon)', year: 2040, month: 11, className: 'milestone-end' }
+      ];
+
+      // ------------------------------------------------------------------------
+      // State
+      // ------------------------------------------------------------------------
+      // The thumb starts at the far right end of the track (Dec 2040)
+      let currentMonthIndex = TOTAL_STEPS;
+      let isPlaying = false;
+      let playIntervalId = null;
+      let isCollapsed = false;
+      let isDragging = false;
+
+      // ------------------------------------------------------------------------
+      // DOM Elements
+      // ------------------------------------------------------------------------
+      const timelineDock = document.getElementById('timelineDock');
+      const tabToggleBtn = document.getElementById('tabToggleBtn');
+      const tabLabel = document.getElementById('tabLabel');
+      
+      const displayDate = document.getElementById('displayDate');
+      const statusBadge = document.getElementById('statusBadge');
+      
+      const btnMinus10y = document.getElementById('btnMinus10y');
+      const btnToday = document.getElementById('btnToday');
+      const btnTodayYear = document.getElementById('btnTodayYear');
+      const btnPlus10y = document.getElementById('btnPlus10y');
+      const btn2030 = document.getElementById('btn2030');
+      const btn2040 = document.getElementById('btn2040');
+
+      const trackWrapper = document.getElementById('trackWrapper');
+      const sliderTrack = document.getElementById('sliderTrack');
+      const todayMarkerLine = document.getElementById('todayMarkerLine');
+      const sliderThumb = document.getElementById('sliderThumb');
+
+      const playBtn = document.getElementById('playBtn');
+      const playBtnText = document.getElementById('playBtnText');
+      const playIconSvg = document.getElementById('playIconSvg');
+      const monthSelect = document.getElementById('monthSelect');
+      const milestonesContainer = document.getElementById('milestonesContainer');
+
+      // ------------------------------------------------------------------------
+      // Initial Setup & Dynamic Gradient Generation
+      // ------------------------------------------------------------------------
+      function initTrackGradientAndMarker() {
+        btnTodayYear.textContent = todayYear;
+
+        // Position the Today marker by calculated percentage
+        todayMarkerLine.style.left = `${todayPercent}%`;
+
+        // Compute the seamless cool-to-hot heat gradient split directly at Today
+        // Left (2000 to Today): Teal gradient (#0b6e65 to #12b5a0)
+        // Right (Today to 2040): Orange-brown through crimson (#9a5516 -> #8a3a2a -> #7a0f35)
+        const stopPct = todayPercent.toFixed(2);
+        const midRightPct = (todayPercent + (100 - todayPercent) * 0.45).toFixed(2);
+        
+        sliderTrack.style.background = `linear-gradient(
+          to right,
+          #0b6e65 0%,
+          #12b5a0 ${stopPct}%,
+          #9a5516 ${stopPct}%,
+          #8a3a2a ${midRightPct}%,
+          #7a0f35 100%
+        )`;
+
+        // Render Milestones at mathematically precise positions
+        milestonesContainer.innerHTML = '';
+        MILESTONES.forEach((m, idx) => {
+          const stepIndex = (m.year - MIN_YEAR) * 12 + m.month;
+          const posPct = (stepIndex / TOTAL_STEPS) * 100;
+          
+          const labelEl = document.createElement('span');
+          labelEl.className = `milestone-label ${m.className || ''}`;
+          labelEl.textContent = m.label;
+          labelEl.style.left = `${posPct}%`;
+          labelEl.dataset.stepIndex = stepIndex;
+
+          labelEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setTimelineIndex(stepIndex);
+          });
+
+          milestonesContainer.appendChild(labelEl);
+        });
+      }
+
+      // Convert step index (0..491) to Year and Month
+      function indexToYearMonth(index) {
+        const year = MIN_YEAR + Math.floor(index / 12);
+        const month = index % 12;
+        return { year, month };
+      }
+
+      // Convert Year and Month to step index
+      function yearMonthToIndex(year, month) {
+        return Math.max(0, Math.min(TOTAL_STEPS, (year - MIN_YEAR) * 12 + month));
+      }
+
+      // ------------------------------------------------------------------------
+      // State Render Loop
+      // ------------------------------------------------------------------------
+      function render() {
+        const { year, month } = indexToYearMonth(currentMonthIndex);
+        const currentPercent = (currentMonthIndex / TOTAL_STEPS) * 100;
+
+        // 1. Update Display Date in Serif Display
+        displayDate.textContent = `${MONTH_NAMES[month]} ${year}`;
+
+        // 2. Update Status Badge
+        if (currentMonthIndex > todayIndex) {
+          statusBadge.textContent = 'MODEL PROJECTION (95% CI)';
+          statusBadge.className = 'status-badge projection';
+        } else {
+          statusBadge.textContent = 'OBSERVED DATA';
+          statusBadge.className = 'status-badge observed';
+        }
+
+        // 3. Update Thumb Position & Accessibility
+        sliderThumb.style.left = `${currentPercent}%`;
+        sliderThumb.setAttribute('aria-valuenow', currentMonthIndex);
+        sliderThumb.setAttribute('aria-valuetext', `${MONTH_NAMES[month]} ${year}`);
+
+        // 4. Update Month Dropdown without firing change loop
+        if (parseInt(monthSelect.value, 10) !== month) {
+          monthSelect.value = month;
+        }
+
+        // 5. Highlight Nearest Milestone
+        const milestoneLabels = milestonesContainer.querySelectorAll('.milestone-label');
+        let nearestEl = null;
+        let minDiff = Infinity;
+
+        milestoneLabels.forEach((el) => {
+          const step = parseInt(el.dataset.stepIndex, 10);
+          const diff = Math.abs(step - currentMonthIndex);
+          if (diff < minDiff) {
+            minDiff = diff;
+            nearestEl = el;
+          }
+          el.classList.remove('active-milestone');
+        });
+
+        if (nearestEl) {
+          nearestEl.classList.add('active-milestone');
+        }
+      }
+
+      function setTimelineIndex(newIndex) {
+        currentMonthIndex = Math.max(0, Math.min(TOTAL_STEPS, Math.round(newIndex)));
+        render();
+      }
+
+      // ------------------------------------------------------------------------
+      // Play / Pause Animation Loop
+      // ------------------------------------------------------------------------
+      function togglePlay() {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+          playBtnText.textContent = 'Pause';
+          playIconSvg.innerHTML = `
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          `;
+          
+          playIntervalId = setInterval(() => {
+            if (currentMonthIndex >= TOTAL_STEPS) {
+              setTimelineIndex(0); // Loop back to start
+            } else {
+              setTimelineIndex(currentMonthIndex + 1);
+            }
+          }, 90);
+        } else {
+          stopPlaying();
+        }
+      }
+
+      function stopPlaying() {
+        if (isPlaying) {
+          isPlaying = false;
+          playBtnText.textContent = 'Play Timeline';
+          playIconSvg.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+          clearInterval(playIntervalId);
+          playIntervalId = null;
+        }
+      }
+
+      // ------------------------------------------------------------------------
+      // Collapse / Expand Toggle
+      // ------------------------------------------------------------------------
+      tabToggleBtn.addEventListener('click', () => {
+        isCollapsed = !isCollapsed;
+        timelineDock.classList.toggle('is-collapsed', isCollapsed);
+        tabLabel.textContent = isCollapsed ? 'Show Timeline' : 'Hide Timeline';
+      });
+
+      // ------------------------------------------------------------------------
+      // Quick-Jump Handlers
+      // ------------------------------------------------------------------------
+      btnMinus10y.addEventListener('click', () => {
+        stopPlaying();
+        setTimelineIndex(currentMonthIndex - 120); // -10 years (120 months)
+      });
+
+      btnToday.addEventListener('click', () => {
+        stopPlaying();
+        setTimelineIndex(todayIndex);
+      });
+
+      btnPlus10y.addEventListener('click', () => {
+        stopPlaying();
+        setTimelineIndex(currentMonthIndex + 120); // +10 years (120 months)
+      });
+
+      btn2030.addEventListener('click', () => {
+        stopPlaying();
+        const { month } = indexToYearMonth(currentMonthIndex);
+        setTimelineIndex(yearMonthToIndex(2030, month));
+      });
+
+      btn2040.addEventListener('click', () => {
+        stopPlaying();
+        setTimelineIndex(TOTAL_STEPS); // Far right end (Dec 2040)
+      });
+
+      // ------------------------------------------------------------------------
+      // Month Dropdown Handler
+      // ------------------------------------------------------------------------
+      monthSelect.addEventListener('change', (e) => {
+        stopPlaying();
+        const newMonth = parseInt(e.target.value, 10);
+        const { year } = indexToYearMonth(currentMonthIndex);
+        setTimelineIndex(yearMonthToIndex(year, newMonth));
+      });
+
+      // ------------------------------------------------------------------------
+      // Play Button Handler
+      // ------------------------------------------------------------------------
+      playBtn.addEventListener('click', togglePlay);
+
+      // ------------------------------------------------------------------------
+      // Slider Dragging & Click Handling
+      // ------------------------------------------------------------------------
+      function handleTrackInteraction(clientX) {
+        const rect = trackWrapper.getBoundingClientRect();
+        if (rect.width <= 0) return;
+        const offsetX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+        const fraction = offsetX / rect.width;
+        setTimelineIndex(fraction * TOTAL_STEPS);
+      }
+
+      trackWrapper.addEventListener('pointerdown', (e) => {
+        stopPlaying();
+        isDragging = true;
+        sliderThumb.classList.add('is-dragging');
+        sliderThumb.focus();
+        handleTrackInteraction(e.clientX);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+      });
+
+      function onPointerMove(e) {
+        if (!isDragging) return;
+        handleTrackInteraction(e.clientX);
+      }
+
+      function onPointerUp() {
+        if (isDragging) {
+          isDragging = false;
+          sliderThumb.classList.remove('is-dragging');
+          window.removeEventListener('pointermove', onPointerMove);
+          window.removeEventListener('pointerup', onPointerUp);
+        }
+      }
+
+      // ------------------------------------------------------------------------
+      // Keyboard Accessibility
+      // ------------------------------------------------------------------------
+      sliderThumb.addEventListener('keydown', (e) => {
+        stopPlaying();
+        if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const step = e.shiftKey ? 12 : 1; // Shift = 1 year, Normal = 1 month
+          setTimelineIndex(currentMonthIndex + step);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const step = e.shiftKey ? 12 : 1;
+          setTimelineIndex(currentMonthIndex - step);
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          setTimelineIndex(0);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          setTimelineIndex(TOTAL_STEPS);
+        }
+      });
+
+      // ------------------------------------------------------------------------
+      // Initialize
+      // ------------------------------------------------------------------------
+      initTrackGradientAndMarker();
+      render();
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "NASA Earth Trend Detective 3D",
+  "description": "Interactive 3D Earth trend detective app featuring user auth to save data, real human field reports from 2022-2026, and adaptive Simple (B1 + visuals), Normal, and Complicated (research paper) data modes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"],
+  "createdAt": "2026-11-14T10:13:00.000Z",
+  "created_at": "2026-11-14T10:13:00.000Z",
+  "buildDate": "2026-11-15T19:34:00.000Z",
+  "build_at": "2026-11-15T19:34:00.000Z",
+  "releaseDate": "2026-11-15T21:43:00.000Z",
+  "release_date": "2026-11-15T21:43:00.000Z"
+}

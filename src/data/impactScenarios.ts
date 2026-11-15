@@ -1,0 +1,542 @@
+/**
+ * NASA Earth System Impact Scenarios
+ * Grounded in NASA EarthData, NEX-GDDP-CMIP6 downscaled models,
+ * and IPCC AR6 Working Group II assessments.
+ * Powers the "What Would Happen?" search and predictive simulation engine.
+ */
+
+// What this does: Defines a single "What Would Happen?" climate impact scenario with trigger temperature, numbers, and consequences.
+// On the website: Powers each searchable scenario card inside the Impact Inquiry ("What Would Happen?") modal.
+// Used as: The blueprint for entries in the IMPACT_SCENARIOS catalog.
+export interface ImpactScenario {
+  id: string;
+  title: string;
+  category: string;
+  branch?: 'temperature' | 'humidity' | 'wind';
+  temperatureTriggerC: number;  // Global anomaly in °C that triggers or defines this scenario
+  approximateYearSSP245: number; // Approximate year under SSP2-4.5
+  questionPrompts: string[];   // Natural language search triggers
+  headline: string;
+  summary: string;
+  quantifiedMetrics: {
+    label: string;
+    value: string;
+    delta: string;
+    unit: string;
+  }[];
+  cascadingConsequences: string[];
+  associatedHotspotId?: string;
+  associatedRegionCoords?: { lat: number; lng: number };
+  nasaDataSources: string[];
+}
+
+// What this does: Stores pre-researched climate impact scenarios covering heat, sea level, crops, coral reefs, humidity, and wind storms.
+// On the website: Lets users search questions like "what happens at 2 degrees" and jump to the matching region on the 3D globe.
+// Used as: The scenario dataset for ImpactInquiryModal.
+export const IMPACT_SCENARIOS: ImpactScenario[] = [
+  {
+    id: 'warming-1-5-vs-2-0',
+    title: 'The 1.5°C vs 2.0°C Planetary Threshold',
+    category: 'Temperature Thresholds',
+    temperatureTriggerC: 1.5,
+    approximateYearSSP245: 2031,
+    questionPrompts: [
+      'what happens at 1.5 degrees',
+      'what happens at 2 degrees',
+      'difference between 1.5 and 2.0',
+      'paris agreement threshold',
+      'what happens if temperature rises',
+    ],
+    headline: 'Limiting warming to 1.5°C instead of 2.0°C reduces extreme heat exposure by 50% and saves coral biomes.',
+    summary: 'NASA Earth Exchange downscaled projections show that between 1.5°C and 2.0°C, climate risks do not scale linearly. The frequency of once-in-a-decade extreme heatwaves triples, Arctic ice-free summers become 10x more frequent, and critical Earth-system tipping elements are engaged.',
+    quantifiedMetrics: [
+      { label: 'Global Population Exposed to Extreme Heat', value: '1.7 Billion', delta: '+1.28 Billion vs 1.5°C', unit: 'People' },
+      { label: 'Tropical Coral Reef Habitat Loss', value: '99%', delta: '+29% vs 1.5°C', unit: 'Total Reefs' },
+      { label: 'Arctic Ice-Free Summer Frequency', value: '1 in 10 Years', delta: '10x Increase vs 1.5°C', unit: 'Frequency' },
+      { label: 'Permafrost Area Thawed', value: '4.8 Million', delta: '+38% Loss', unit: 'km²' },
+    ],
+    cascadingConsequences: [
+      'Double the species loss among vertebrates, plants, and insects.',
+      '61 million additional people exposed to severe urban drought.',
+      'Significant acceleration of Greenland and West Antarctic ice sheet destabilization.',
+      'Expansion of vector-borne disease transmission zones into temperate latitudes.',
+    ],
+    associatedHotspotId: 'arctic-sea-ice',
+    associatedRegionCoords: { lat: 76.5, lng: -15.0 },
+    nasaDataSources: ['NASA NEX-GDDP-CMIP6', 'GISTEMP v4', 'ICESat-2'],
+  },
+  {
+    id: 'sea-level-coastal-flooding',
+    title: 'Coastal Inundation & Sea Level Surge',
+    category: 'Sea Level & Coasts',
+    temperatureTriggerC: 1.8,
+    approximateYearSSP245: 2035,
+    questionPrompts: [
+      'what happens if sea level rises',
+      'coastal flooding impact',
+      'cities underwater',
+      'sea level rise 2040',
+      'what happens to coastal cities',
+    ],
+    headline: 'Sea level rise of 28–45 cm by 2040 exponentially increases 100-year storm flood frequency by 300%.',
+    summary: 'Satellite radar altimetry (Jason-3, Sentinel-6 Michael Freilich, and SWOT) indicates global sea level rise is accelerating at 4.6 mm/year. Thermal expansion coupled with rapid ice loss from Greenland and Antarctica places trillions in coastal assets and hundreds of millions of residents at risk of high-tide sunny-day flooding.',
+    quantifiedMetrics: [
+      { label: 'Global Population in Coastal Flood Zones', value: '340 Million', delta: '+85 Million by 2038', unit: 'People' },
+      { label: 'Global Coastal Asset Value at Risk', value: '$14.2 Trillion', delta: '+$4.1T by 2040', unit: 'USD' },
+      { label: 'Rate of Sea Level Rise', value: '4.8 mm/yr', delta: '+120% vs 1990', unit: 'Velocity' },
+      { label: 'High-Tide "Sunny Day" Flooding Days', value: '45 Days/yr', delta: '4x Increase', unit: 'Days' },
+    ],
+    cascadingConsequences: [
+      'Catastrophic storm surge inundation in mega-deltas (Nile Delta, Mekong, Ganges-Brahmaputra).',
+      'Severe saltwater intrusion into municipal drinking water aquifers in Florida, Alexandria, and Jakarta.',
+      'Managed retreat and displacement of island populations in the South Pacific and Indian Oceans.',
+      'Loss of coastal wetlands, salt marshes, and natural storm buffers.',
+    ],
+    associatedHotspotId: 'greenland-ice-sheet',
+    associatedRegionCoords: { lat: 69.2, lng: -49.5 },
+    nasaDataSources: ['Sentinel-6 Michael Freilich', 'SWOT', 'GRACE-FO', 'Jason-3'],
+  },
+  {
+    id: 'amazon-dieback-savannization',
+    title: 'Amazon Rainforest Tipping Point & Savannization',
+    category: 'Biosphere & Forests',
+    temperatureTriggerC: 1.6,
+    approximateYearSSP245: 2032,
+    questionPrompts: [
+      'what happens to amazon rainforest',
+      'amazon deforestation consequence',
+      'savanna tipping point',
+      'rainforest dieback',
+      'amazon drying up',
+    ],
+    headline: 'Passing 20–25% deforestation triggers irreversible collapse into degraded scrub savanna, releasing 120 Gt carbon.',
+    summary: 'NASA GEDI spaceborne lidar and ECOSTRESS thermal measurements track how deforestation fragments the Amazon moisture pump. Once tree canopy cover drops below the critical threshold, internal evapotranspiration fails to sustain dry-season precipitation, triggering systemic vegetative dieback.',
+    quantifiedMetrics: [
+      { label: 'Stored Biomass Carbon at Risk of Release', value: '120 Gigatons', delta: 'Equivalent to 12 Years Global Emissions', unit: 'Gt CO2' },
+      { label: 'Basin Rainfall Reduction', value: '-22%', delta: 'Dry Season Deficit', unit: 'Precipitation' },
+      { label: 'Biomass Canopy Density Loss', value: '-35%', delta: 'In Southeastern Basin', unit: 'Canopy Index' },
+      { label: 'Endemic Species Extinction Risk', value: '28%', delta: 'Amazonian Flora/Fauna', unit: 'Species' },
+    ],
+    cascadingConsequences: [
+      'Disruption of the "Flying Rivers" aerial moisture corridors supplying rainfall to São Paulo and La Plata agricultural zones.',
+      'Transition of the world\'s largest terrestrial carbon sink into a net atmospheric carbon source.',
+      'Massive loss of indigenous ancestral territories and irreplaceable biological pharmacology.',
+      'Frequent mega-wildfires burning into deep primary rainforest understory.',
+    ],
+    associatedHotspotId: 'amazon-basin',
+    associatedRegionCoords: { lat: -3.46, lng: -62.21 },
+    nasaDataSources: ['GEDI Space Lidar', 'ECOSTRESS', 'Landsat-9', 'MODIS Fire'],
+  },
+  {
+    id: 'agricultural-food-security',
+    title: 'Global Crop Yield Declines & Food Security Shocks',
+    category: 'Food & Agriculture',
+    temperatureTriggerC: 1.7,
+    approximateYearSSP245: 2034,
+    questionPrompts: [
+      'what happens to agriculture',
+      'what happens to food supply',
+      'crop yield failure',
+      'wheat and corn shortage',
+      'famine and drought food',
+    ],
+    headline: 'Each 1°C rise decreases global wheat yields by 6% and corn by 7.4%, multiplying concurrent breadbasket failures.',
+    summary: 'NASA Harvest and SMAP soil moisture data model how heat stress during pollination and flowering severely impairs staple crop yields. Simultaneous droughts across multiple global breadbaskets (Midwest USA, Ukraine, Brazil, North China Plain) increase the probability of synchronous food price spikes by 450%.',
+    quantifiedMetrics: [
+      { label: 'Global Corn (Maize) Yield Impact', value: '-12.8%', delta: 'At +1.7°C Anomaly', unit: 'Yield %' },
+      { label: 'Global Wheat Production Deficit', value: '-10.4%', delta: 'At +1.7°C Anomaly', unit: 'Yield %' },
+      { label: 'Population at Severe Food Insecurity Risk', value: '480 Million', delta: '+180 Million vs 2020', unit: 'People' },
+      { label: 'Synchronous Breadbasket Failure Probability', value: '4.5x', delta: 'Historical Baseline', unit: 'Risk Multiplier' },
+    ],
+    cascadingConsequences: [
+      'Sharp volatility in global commodity markets triggering civil instability in food-import dependent nations.',
+      'Severe agricultural water overdraft in underground aquifers (California Central Valley, Ogallala, Indo-Gangetic).',
+      'Nutritional decline in staple grains with reduced protein, zinc, and iron concentrations under elevated CO2.',
+      'Livestock thermal stress reducing milk production and raising animal mortality.',
+    ],
+    associatedHotspotId: 'california-sierra',
+    associatedRegionCoords: { lat: 36.7, lng: -119.7 },
+    nasaDataSources: ['NASA Harvest', 'SMAP', 'GRACE-FO', 'ECOSTRESS'],
+  },
+  {
+    id: 'extreme-heat-wet-bulb-survivability',
+    title: 'Lethal Wet-Bulb Heat Stress & Human Survivability',
+    category: 'Extreme Weather',
+    temperatureTriggerC: 1.9,
+    approximateYearSSP245: 2036,
+    questionPrompts: [
+      'what happens with extreme heat',
+      'wet bulb temperature 35',
+      'human survivability heat',
+      'heatwave deaths 2035',
+      'heat dome consequences',
+    ],
+    headline: 'Wet-bulb temperatures exceeding 35°C prevent human metabolic cooling, rendering outdoor work lethal without AC.',
+    summary: 'Combined high humidity and ambient temperature measured by AIRS (Atmospheric Infrared Sounder) and MERRA-2 projects regions where the human body cannot dissipate heat through perspiration. By 2036, millions in the Persian Gulf, Indus Valley, and North China Plain will experience annual lethal wet-bulb events.',
+    quantifiedMetrics: [
+      { label: 'Population Exposed to Dangerous Wet-Bulb (>32°C)', value: '620 Million', delta: '+310M vs 2026', unit: 'People' },
+      { label: 'Annual Extreme Heatwave Days in Tropics', value: '68 Days/yr', delta: '+35 Days vs 2000', unit: 'Days' },
+      { label: 'Peak Urban Heat Island Surface Temp', value: '54.5°C', delta: 'In Major Megacities', unit: 'Peak Celsius' },
+      { label: 'Labor Productivity Loss in Construction/Agri', value: '-32%', delta: 'Under Sun Exposure', unit: 'Productivity' },
+    ],
+    cascadingConsequences: [
+      'Widespread electrical grid brownouts from exponential cooling demand spikes.',
+      'Large-scale climate migration away from unlivable equatorial lowlands.',
+      'Acute surges in cardiovascular and kidney failure among vulnerable elderly and outdoor workers.',
+      'Asphalt melting, rail buckling, and aircraft grounded due to air density reductions.',
+    ],
+    associatedHotspotId: 'sahara-sahel',
+    associatedRegionCoords: { lat: 16.8, lng: 12.5 },
+    nasaDataSources: ['NASA AIRS', 'MERRA-2', 'ECOSTRESS Thermal'],
+  },
+  {
+    id: 'third-pole-glaciers-water-towers',
+    title: 'Himalayan Glacier Retreat & Downstream Water Insecurity',
+    category: 'Water & Glaciers',
+    temperatureTriggerC: 1.5,
+    approximateYearSSP245: 2031,
+    questionPrompts: [
+      'what happens if glaciers melt',
+      'tibetan plateau consequences',
+      'water crisis in asia',
+      'glacier lakes outburst floods',
+      'himalaya melting impact',
+    ],
+    headline: 'Melting of the Third Pole water towers alters seasonal river flow for 1.4 billion people across Asia.',
+    summary: 'NASA ASTER and ICESat-2 track rapid ice volume drawdown across the Hindu Kush Himalayas. Initial melt accelerates peak spring runoff and proglacial lake outbursts (GLOFs), followed by structural dry-season streamflow collapse in the Indus, Ganges, Brahmaputra, and Yangtze basins.',
+    quantifiedMetrics: [
+      { label: 'Glacier Ice Volume Lost', value: '-36%', delta: 'By 2040 in Central Himalayas', unit: 'Volume' },
+      { label: 'Downstream Population Dependent on Runoff', value: '1.4 Billion', delta: 'River Basin Communities', unit: 'People' },
+      { label: 'High-Hazard Glacial Lakes Formed', value: '1,420 Lakes', delta: '+450 Lakes since 2000', unit: 'GLOF Lakes' },
+      { label: 'Dry-Season Hydropower Generation Drop', value: '-28%', delta: 'Tributary Dams', unit: 'Capacity' },
+    ],
+    cascadingConsequences: [
+      'Severe agricultural water shortages during the pre-monsoon planting season in Pakistan and Northern India.',
+      'Catastrophic glacial lake outburst floods washing away downstream villages and hydro-electric turbines.',
+      'Heightened geopolitical tensions over transboundary river diversion and damming.',
+      'Loss of irreplaceable cultural identity for high-altitude Himalayan mountain communities.',
+    ],
+    associatedHotspotId: 'tibetan-plateau',
+    associatedRegionCoords: { lat: 32.5, lng: 88.2 },
+    nasaDataSources: ['ASTER', 'ICESat-2', 'SRTM', 'Landsat-9'],
+  },
+  {
+    id: 'coral-reef-marine-ecosystem-collapse',
+    title: 'Complete Degradation of Tropical Coral Reef Biomes',
+    category: 'Biosphere & Forests',
+    temperatureTriggerC: 1.5,
+    approximateYearSSP245: 2031,
+    questionPrompts: [
+      'what happens to coral reefs',
+      'great barrier reef bleaching consequence',
+      'marine heatwave impacts',
+      'ocean warming consequences',
+      'fish extinction climate',
+    ],
+    headline: 'Sustained thermal stress eliminates 70–90% of coral reefs at 1.5°C and over 99% at 2.0°C.',
+    summary: 'NOAA Coral Reef Watch in partnership with NASA Terra MODIS indicates repeat annual thermal bleaching exceeds reef recovery windows. Because coral reefs support 25% of all marine life despite covering less than 0.1% of the ocean floor, reef mortality collapses artisanal coastal fisheries and coastal wave barriers.',
+    quantifiedMetrics: [
+      { label: 'Tropical Reef Bleaching Mortality', value: '78%', delta: 'At Current Trajectory', unit: 'Reef Area' },
+      { label: 'Coastal Community Fishery Livelihoods at Risk', value: '500 Million', delta: 'Subsistence Dependent', unit: 'People' },
+      { label: 'Wave Energy Attenuation Lost', value: '-84%', delta: 'Increases Shoreline Erosion', unit: 'Barrier Protection' },
+      { label: 'Economic Tourism & Ecosystem Service Loss', value: '$375 Billion/yr', delta: 'Global Annual Cost', unit: 'USD' },
+    ],
+    cascadingConsequences: [
+      'Severe protein deficits for coastal island and developing tropical nations.',
+      'Unchecked beach erosion and storm surge damage along formerly protected coasts.',
+      'Irreversible loss of marine genetic biodiversity and potential medical discoveries.',
+      'Shift toward jellyfish, algae-dominated, and depleted marine dead zones.',
+    ],
+    associatedHotspotId: 'great-barrier-reef',
+    associatedRegionCoords: { lat: -18.28, lng: 147.7 },
+    nasaDataSources: ['MODIS Sea Surface Temp', 'VIIRS', 'Coral Reef Watch'],
+  },
+  {
+    id: 'lethal-wet-bulb-threshold',
+    title: 'Lethal Moist Heat Emergence (35°C Wet-Bulb Limit)',
+    category: 'Temperature Thresholds',
+    temperatureTriggerC: 1.8,
+    approximateYearSSP245: 2034,
+    questionPrompts: [
+      'what happens at 35 wet bulb',
+      'lethal humidity threshold',
+      'wet bulb heat stress',
+      'persian gulf humidity future',
+      'can humans survive high humidity',
+    ],
+    headline: 'Compound extreme temperature and marine humidity push Wet-Bulb temperatures past physiological survivability.',
+    summary: 'NASA AIRS water vapor sounding and MERRA-2 reanalysis show coastal areas along the Persian Gulf, Red Sea, Indus Valley, and South China Sea crossing the critical 35°C Wet-Bulb threshold (T_w). At this point, evaporative cooling of the human body through sweating becomes physically impossible, causing heat stroke in the shade within 6 hours.',
+    quantifiedMetrics: [
+      { label: 'Exposed Population to Lethal T_w (≥32°C)', value: '310 Million', delta: '+220M by 2035', unit: 'People' },
+      { label: 'Peak Wet-Bulb Recorded', value: '34.8°C', delta: '+1.6°C above historic', unit: 'T_w' },
+      { label: 'Uncooled Safe Outdoor Labor Hours', value: '0 Hours/day', delta: '-100% in peak afternoons', unit: 'Labor' },
+      { label: 'Critical Grid Reliance for Survivability', value: '100%', delta: 'Continuous Power Vital', unit: 'Index' },
+    ],
+    cascadingConsequences: [
+      'Total cessation of outdoor construction, agriculture, and municipal maintenance during daylight.',
+      'Massive power grid blackout vulnerabilities where substation failures trigger mass-casualty hyperthermia events.',
+      'Regional economic displacement and migration away from hyper-humid tropical coastlines.',
+      'Mandatory installation of pressurized cooling bunkers for vulnerable urban populations.',
+    ],
+    associatedHotspotId: 'persian-gulf-heat-moisture',
+    associatedRegionCoords: { lat: 26.5, lng: 52.0 },
+    nasaDataSources: ['NASA AIRS on Aqua', 'MERRA-2', 'HadISDH', 'ECMWF ERA5'],
+  },
+  {
+    id: 'atmospheric-desiccation-megadrought',
+    title: 'Continental Atmospheric Desiccation & VPD Megadrought',
+    category: 'Biosphere & Forests',
+    temperatureTriggerC: 1.7,
+    approximateYearSSP245: 2032,
+    questionPrompts: [
+      'why is land humidity dropping',
+      'atmospheric thirst VPD',
+      'california megadrought humidity',
+      'forest wildfire VPD spike',
+      'what happens when relative humidity falls',
+    ],
+    headline: 'Accelerated continental warming creates atmospheric thirst, drying out forests and triggering mega-wildfires.',
+    summary: 'Peer-reviewed research by Byrne & O’Gorman (2018 PNAS) and NASA ECOSTRESS observations prove that because landmasses warm faster than oceans, continental relative humidity drops systematically. The resulting Vapor Pressure Deficit (VPD) spike pulls moisture out of living tree canopies and soil, turning temperate forests into explosive tinder.',
+    quantifiedMetrics: [
+      { label: 'Global Continental Relative Humidity Drop', value: '-2.4%', delta: '-0.9%/decade over land', unit: 'ΔRH' },
+      { label: 'Vapor Pressure Deficit (VPD) Escalation', value: '+24%', delta: '+0.32 kPa above baseline', unit: 'VPD' },
+      { label: 'Wildfire Annual Burned Area Increase', value: '+420%', delta: 'Across Western US & Mediterranean', unit: 'Area' },
+      { label: 'Forest Dieback Biomass Loss', value: '14.2 Billion', delta: 'Metric Tons Carbon Released', unit: 'Tonnes C' },
+    ],
+    cascadingConsequences: [
+      'Unprecedented wildfire spread rates that outpace conventional firefighting response capacity.',
+      'Agricultural crop yield collapse driven by atmospheric thirst rather than lack of irrigation alone.',
+      'Long-term tree mortality leading to biome conversion from dense forest to dry scrubland.',
+      'Dangerous deterioration of air quality from particulate matter (PM2.5) across urban centers.',
+    ],
+    associatedHotspotId: 'california-vpd',
+    associatedRegionCoords: { lat: 37.8, lng: -120.5 },
+    nasaDataSources: ['NASA ECOSTRESS', 'MODIS Surface Temp', 'SMAP', 'AIRS'],
+  },
+  {
+    id: 'atmospheric-river-moisture-corridor',
+    title: 'Supercharged Atmospheric River Moisture Corridors',
+    category: 'Extreme Weather',
+    temperatureTriggerC: 1.6,
+    approximateYearSSP245: 2030,
+    questionPrompts: [
+      'atmospheric river supercharged',
+      'more water in the air flood',
+      '7 percent moisture per degree',
+      'clausius clapeyron extreme rain',
+      'pacific moisture corridor flooding',
+    ],
+    headline: 'Thermodynamic Clausius-Clapeyron moisture expansion fuels extreme deluge and catastrophic flooding.',
+    summary: 'With atmospheric specific humidity expanding at ~7% per °C of warming, narrow atmospheric rivers carrying tropical moisture over the oceans become supercharged conveyor belts. Upon making landfall against mountain ranges, these corridors dump 200–400% of normal monthly precipitation in 48 hours.',
+    quantifiedMetrics: [
+      { label: 'Atmospheric River Moisture Transport', value: '+28%', delta: '+7%/°C moisture holding', unit: 'Vapor Flux' },
+      { label: 'Category 5 Atmospheric River Frequency', value: 'Tripled', delta: '3x increase vs 2000', unit: 'Frequency' },
+      { label: 'Flash Flood and Debris Flow Risk', value: '+65%', delta: 'In post-wildfire burn scars', unit: 'Hazard' },
+      { label: 'Annual Infrastructure Flood Damage', value: '$84 Billion', delta: '+140% increase', unit: 'USD' },
+    ],
+    cascadingConsequences: [
+      'Massive reservoir over-topping and forced emergency spillway releases.',
+      'Severe agricultural topsoil erosion and transportation corridor washouts.',
+      'Compounding disaster cycle where summer wildfire burn scars become winter mudslide channels.',
+      'Accelerated Arctic and coastal glacier melt when warm moist air intrusions penetrate high latitudes.',
+    ],
+    associatedHotspotId: 'tropical-pacific-vapor',
+    associatedRegionCoords: { lat: 0.0, lng: -160.0 },
+    nasaDataSources: ['NASA GPM Core Observatory', 'AIRS Water Vapor', 'MERRA-2'],
+  },
+  // ==========================================
+  // ATMOSPHERIC HUMIDITY BRANCH SCENARIOS
+  // ==========================================
+  {
+    id: 'fatal-wet-bulb-35c-exceedance',
+    title: 'Fatal 35°C Wet-Bulb Exceedance in Tropical Basins',
+    category: 'Humidity & Wet-Bulb Limits',
+    branch: 'humidity',
+    temperatureTriggerC: 1.7,
+    approximateYearSSP245: 2033,
+    questionPrompts: [
+      'wet bulb 35 degrees survivability',
+      'extreme humidity human limit',
+      'moist heat death threshold',
+      'persian gulf indus wet bulb',
+      'humidity and heat sweat evaporation failure',
+    ],
+    headline: 'At 35°C wet-bulb temperature, human metabolic heat dissipation fails completely, making uncooled outdoor survival impossible beyond 6 hours.',
+    summary: 'NASA AIRS and HadISDH observations show extreme combinations of 38°C dry-bulb air and 75% relative humidity are already approaching the thermodynamic limit of human survivability across the Persian Gulf, Indus Basin, and North China Plain. The body cannot evaporate sweat into saturated air.',
+    quantifiedMetrics: [
+      { label: 'Population at Fatal Wet-Bulb Risk', value: '520 Million', delta: '+380M by 2036', unit: 'People' },
+      { label: 'Critical Exposure Hours per Year', value: '42 Hours/yr', delta: '12x Increase vs 2000', unit: 'Hours' },
+      { label: 'Maximum Outdoor Labor Capacity', value: '18%', delta: '-62% Loss', unit: 'Capacity' },
+      { label: 'Power Grid Cooling Outage Risk', value: 'Extreme', delta: 'Simultaneous Peak Load', unit: 'Vulnerability' },
+    ],
+    cascadingConsequences: [
+      'Mandatory cessation of outdoor daytime construction and agricultural operations.',
+      'Catastrophic mortality risks during power grid blackouts without mechanical air cooling.',
+      'Displacement of rural agricultural workers into crowded urban cooling shelters.',
+      'Massive loss of unhoused and vulnerable demographic populations unable to access conditioned spaces.',
+    ],
+    associatedHotspotId: 'persian-gulf-indus-humidity',
+    associatedRegionCoords: { lat: 26.8, lng: 52.5 },
+    nasaDataSources: ['NASA AIRS on Aqua', 'MERRA-2 Hydroclimatology', 'MODIS Surface Temp'],
+  },
+  {
+    id: 'continental-aridity-rh-plunge',
+    title: 'Continental Mega-Drying & 15% Relative Humidity Plunge',
+    category: 'Continental Desiccation',
+    branch: 'humidity',
+    temperatureTriggerC: 1.8,
+    approximateYearSSP245: 2035,
+    questionPrompts: [
+      'continental drying relative humidity drop',
+      'byrne ogorman land ocean moisture contrast',
+      'vapor pressure deficit forest collapse',
+      'soil moisture desiccation drought',
+    ],
+    headline: 'Continental land relative humidity declines at -1.6% per °C of warming, driving a 35% surge in atmospheric Vapor Pressure Deficit.',
+    summary: 'Byrne & O’Gorman (2018 PNAS) continental drying mechanism: as land warms faster than oceans, marine air entering continents becomes severely under-saturated. The resulting vapor pressure deficit (VPD) surge acts like an atmospheric sponge, desiccating agricultural soils and shutting down tree transpiration.',
+    quantifiedMetrics: [
+      { label: 'Continental Relative Humidity Drop', value: '-4.8% RH', delta: 'Byrne-O’Gorman Trajectory', unit: 'Anomaly' },
+      { label: 'Vapor Pressure Deficit (VPD) Surge', value: '+0.36 kPa', delta: '+32% Evaporative Stress', unit: 'Deficit' },
+      { label: 'Canopy Stomatal Closure Days', value: '68% of Season', delta: 'Stunted Carbon Uptake', unit: 'Days' },
+      { label: 'Agricultural Soil Desiccation Rate', value: '2.4x Faster', delta: 'Accelerated Depletion', unit: 'Velocity' },
+    ],
+    cascadingConsequences: [
+      'Widespread tree mortality and forest biome conversion from canopy woodland to dry scrub.',
+      'Crop yield reductions of 20–35% across breadbasket regions even with full irrigation.',
+      'Severe expansion of explosive wildfire contagion windows due to dry canopy fuels.',
+      'Subsurface groundwater depletion as farmers attempt to compensate for atmospheric vapor thirst.',
+    ],
+    associatedHotspotId: 'sahara-sahel-humidity',
+    associatedRegionCoords: { lat: 17.5, lng: 12.0 },
+    nasaDataSources: ['NASA ECOSTRESS Thermal Infrared', 'SMAP Soil Moisture', 'AIRS Water Vapor'],
+  },
+  // ==========================================
+  // WIND SPEED BRANCH SCENARIOS
+  // ==========================================
+  {
+    id: 'polar-jet-stream-waviness-stall',
+    title: 'Polar Jet Stream Waviness & Persistent Blocking Stalls',
+    category: 'Wind & Jet Stream Stalls',
+    branch: 'wind',
+    temperatureTriggerC: 1.5,
+    approximateYearSSP245: 2031,
+    questionPrompts: [
+      'polar jet stream meandering stall',
+      'rossby wave blocking high stagnation',
+      'arctic amplification wind speed change',
+      'weakened thermal gradient jet loop',
+      'why is the jet stream slowing down',
+    ],
+    headline: 'Weakened equator-to-pole thermal contrast slows circum-planetary jet stream phase speed, locking stationary weather extremes in place for weeks.',
+    summary: 'MERRA-2 and satellite scatterometry document that Arctic amplification reduces the mid-latitude thermal gradient by up to 20%. This causes the 250hPa polar jet stream to form giant, sluggish Rossby waves. Stagnant high-pressure ridges lock in mega-heatwaves, while stationary troughs trigger multi-day flood downpours.',
+    quantifiedMetrics: [
+      { label: 'Rossby Wave Phase Speed Deceleration', value: '-14%', delta: 'Sluggish Weather Movement', unit: 'Velocity' },
+      { label: 'Persistent Blocking High Duration', value: '26 Days', delta: '2.5x Longer Stagnation', unit: 'Duration' },
+      { label: 'Jet Loop North-South Amplitude', value: '+28%', delta: 'Deeper Arctic/Tropical Intrusion', unit: 'Amplitude' },
+      { label: 'Population Affected by Stagnant Heat Domes', value: '840 Million', delta: '+310M vs 2000', unit: 'People' },
+    ],
+    cascadingConsequences: [
+      'Multi-week stationary heat domes trapping lethal urban smog and particulate matter.',
+      'Stationary cutoff lows causing catastrophic localized river basin inundations.',
+      'Unprecedented winter polar vortex displacements triggering deep sub-freezing snaps into subtropical latitudes.',
+      'Grid frequency instability caused by simultaneous multi-nation renewable wind generation dropouts.',
+    ],
+    associatedHotspotId: 'north-atlantic-jet-stream',
+    associatedRegionCoords: { lat: 56.4, lng: -28.2 },
+    nasaDataSources: ['NASA MERRA-2 Atmospheric Reanalysis', 'RapidScat on ISS', 'AIRS Sounder'],
+  },
+  {
+    id: 'terrestrial-wind-stilling-turbine-loss',
+    title: 'Global Terrestrial Wind Stilling vs Renewable Energy Yield',
+    category: 'Wind Energy Stilling',
+    branch: 'wind',
+    temperatureTriggerC: 1.6,
+    approximateYearSSP245: 2032,
+    questionPrompts: [
+      'global terrestrial wind stilling renewable energy',
+      'wind turbine generation drop stilling',
+      'surface roughness boundary layer wind slowing',
+      'zeng nature geoscience wind speed',
+    ],
+    headline: 'Surface aerodynamic roughness and reduced pressure gradients trigger terrestrial wind stilling, cutting wind turbine electricity generation by 12–18%.',
+    summary: 'Zeng et al. (Nature Geoscience) and McVicar et al. (Nature Climate Change): Decadal terrestrial wind stilling decelerates surface 10m winds over continental interiors. Because turbine power scales cubically with velocity (Power ∝ v³), even a 5% drop in average wind velocity reduces kinetic turbine output by nearly 15%.',
+    quantifiedMetrics: [
+      { label: 'Global Land 10m Wind Speed Trend', value: '-0.24 m/s', delta: 'Decadal Stilling Fluctuation', unit: 'Anomaly' },
+      { label: 'Commercial Wind Farm Capacity Factor', value: '-13.5%', delta: 'Cubic Kinetic Loss (P ∝ v³)', unit: 'Yield' },
+      { label: 'Boundary Layer Wind Shear Hub Height', value: '+35 Meters', delta: 'Taller Towers Required', unit: 'Elevation' },
+      { label: 'Annual Renewable Grid Compensation Cost', value: '$38 Billion', delta: 'Peaker & Storage Needs', unit: 'USD' },
+    ],
+    cascadingConsequences: [
+      'Urgent engineering requirement to raise turbine hub heights above 160 meters to harvest higher-altitude laminar flow.',
+      'Increased reliance on battery storage and offshore marine wind belts to compensate for terrestrial stilling lulls.',
+      'Stagnant urban boundary layers trapping ground-level ozone and vehicular NO₂ emissions.',
+      'Reduced pollen dispersal and altered aerodynamic seed distribution for wild plant species.',
+    ],
+    associatedHotspotId: 'great-plains-wind-corridor',
+    associatedRegionCoords: { lat: 36.8, lng: -99.4 },
+    nasaDataSources: ['NASA MERRA-2', 'GOES-16 Sounder', 'MODIS Surface Roughness'],
+  },
+  {
+    id: 'super-typhoon-cat6-wind-surge',
+    title: 'Super-Typhoon Category 6 Sustained Wind Surge (>315 km/h)',
+    category: 'Cyclonic Gale Surges',
+    branch: 'wind',
+    temperatureTriggerC: 1.9,
+    approximateYearSSP245: 2037,
+    questionPrompts: [
+      'category 6 hurricane typhoon wind speed',
+      'extreme cyclone wind 300 kmh',
+      'cygnss eyewall wind intensification',
+      'tropical cyclone wind field expansion',
+    ],
+    headline: 'Elevated ocean thermal energy depth propels tropical cyclones beyond Category 5 scales with sustained eyewall gales exceeding 88 m/s.',
+    summary: 'NASA CYGNSS 8-satellite constellation and Emanuel (2020 BAMS): Deep ocean heat content extending below 100 meters eliminates cold wake negative feedback. Rapid intensification cycles produce super-typhoons with central pressures below 880 hPa and sustained eyewall winds capable of obliterating hardened onshore infrastructure.',
+    quantifiedMetrics: [
+      { label: 'Maximum Sustained Surface Wind', value: '88 m/s (317 km/h)', delta: '+18 m/s vs Historical Max', unit: 'Velocity' },
+      { label: 'Radius of Damaging Gales (>17 m/s)', value: '480 km', delta: '+35% Wind Field Expansion', unit: 'Radius' },
+      { label: 'Power Dissipation Index (PDI)', value: '+42%', delta: 'Surge in Destructive Kinetic Force', unit: 'Index' },
+      { label: 'Wind-Driven Coastal Storm Surge Height', value: '7.8 Meters', delta: '+2.4m vs Pre-2000 Baseline', unit: 'Depth' },
+    ],
+    cascadingConsequences: [
+      'Complete structural failure of conventional coastal utility grids, transmission towers, and port cranes.',
+      'Massive inland penetration of maritime salt-spray aerosols causing agricultural soil salinization.',
+      'Extreme storm surges overtopping Category 5 sea walls and inundating delta megacities.',
+      'Severe mangrove and coastal reef mechanical destruction from extreme wave stress.',
+    ],
+    associatedHotspotId: 'western-pacific-typhoon-corridor',
+    associatedRegionCoords: { lat: 18.2, lng: 133.5 },
+    nasaDataSources: ['NASA CYGNSS 8-Microsatellite Fleet', 'GPM Core Observatory', 'SMAP Radiometer'],
+  },
+  {
+    id: 'southern-ocean-westerly-migration',
+    title: 'Southern Ocean Roaring Forties Poleward Contraction',
+    category: 'Oceanic Wind Acceleration',
+    branch: 'wind',
+    temperatureTriggerC: 1.7,
+    approximateYearSSP245: 2034,
+    questionPrompts: [
+      'roaring forties wind speed increasing',
+      'southern ocean westerlies shifting south',
+      'ascat cygnss wind wave height ocean',
+      'antarctic circumpolar current wind forcing',
+    ],
+    headline: 'Strengthening circumpolar westerly winds shift 2° south toward Antarctica, accelerating deep ocean heat transport and altering global carbon uptake.',
+    summary: 'Young & Ribal (Science) 30-year satellite altimetry and scatterometry: Southern Hemisphere westerlies have accelerated by +1.5% per decade and migrated poleward. This wind stress drives intense Ekman upwelling of carbon-rich deep water and pushes warm water under Antarctic ice shelves.',
+    quantifiedMetrics: [
+      { label: 'Circumpolar Westerly Wind Velocity', value: '+1.8 m/s', delta: '+14% Decadal Acceleration', unit: 'Speed' },
+      { label: 'Mean Southern Ocean Wave Height', value: '+38 cm', delta: 'Increasing Extreme Waves (>14m)', unit: 'Height' },
+      { label: 'Poleward Jet Axis Displacement', value: '2.1° Latitude', delta: 'Southward Migration', unit: 'Degrees' },
+      { label: 'Ekman Upwelling Volume Surge', value: '+22%', delta: 'Deep Ocean Carbon Outgassing', unit: 'Transport' },
+    ],
+    cascadingConsequences: [
+      'Accelerated basal melting of West Antarctic ice shelves from wind-driven deep water incursions.',
+      'Weakening of the Southern Ocean carbon sink efficiency as deep dissolved CO₂ is churned to the surface.',
+      'Extreme maritime hazards for international shipping lanes navigating around Cape Horn and the Cape of Good Hope.',
+      'Shifts in Southern Hemisphere rainfall belts, intensifying droughts in Southwest Australia and South Africa.',
+    ],
+    associatedHotspotId: 'southern-ocean-westerlies',
+    associatedRegionCoords: { lat: -51.8, lng: 73.5 },
+    nasaDataSources: ['NASA CYGNSS', 'Copernicus ASCAT-B', 'Jason-3 Radar Altimeter'],
+  },
+];
+
